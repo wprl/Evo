@@ -4,6 +4,7 @@
  */
 package assignment2a.program;
 
+import assignment2a.Outcome;
 import java.util.List;
 
 /**
@@ -12,30 +13,33 @@ import java.util.List;
  */
 public class OpponentNode extends Tree<Boolean> {
 
-    private List<Boolean> history;
     private int memory;
 
-    public OpponentNode(List<Tree<Boolean>> children, int memory, List<Boolean> history) {
+    public OpponentNode(List<Tree<Boolean>> children, int memory) {
         super(children);
 
-        if(!children.isEmpty()) {
+        if (!children.isEmpty()) {
             throw new IllegalArgumentException("Opponent nodes must be terminal nodes.");
         }
 
-        if(memory < 0) {
+        if (memory < 0) {
             throw new IllegalArgumentException("Position in history must be greater than 0.");
         }
 
-        this.history = history;
+        this.memory = memory;
     }
 
     @Override
-    public Boolean getValue() {
-        return this.history.get(memory);
+    public Boolean getValue(List<Outcome> history) {
+        return history.get(memory).getOpponentCooperates();
+    }
+
+    @Override
+    public String getLabel() {
+        return "O" + memory;
     }
 
     public int getMemory() {
         return memory;
     }
-
 }

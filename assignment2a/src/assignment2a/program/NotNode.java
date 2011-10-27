@@ -4,6 +4,7 @@
  */
 package assignment2a.program;
 
+import assignment2a.Outcome;
 import java.util.List;
 
 /**
@@ -21,7 +22,12 @@ public class NotNode extends Tree<Boolean> {
     }
 
     @Override
-    public Boolean getValue() {
-        return !this.children.get(0).getValue(); // contract in constructor, so this is safe
+    public Boolean getValue(List<Outcome> history) {
+        return !this.children.get(0).getValue(history); // contract in constructor, so this is safe
+    }
+
+    @Override
+    public String getLabel() {
+        return "NOT";
     }
 }

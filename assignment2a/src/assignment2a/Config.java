@@ -13,25 +13,13 @@ import org.w3c.dom.NodeList;
  */
 public class Config {
 
-    private String inputPath;
     private String logPath;
     private String solutionPath;
-    private int numIterations;
+    private int numGenerations;
     private long rngSeed;
-    private double penaltyCoefficient;
-    private int routerCount;
-    private int pathCount;
-    private int stopWhenNoChangeFor;
-    private int populationSize;
-    private int offspringSize;
-    private String parentSelectionMethod;
-    private int kParentTournaments;
-    private String recombinationMethod;
-    private int nCrossoverPoints;
-    private double mutationRate;
-    private String survivalSelectionMethod;
-    private int kSurvivalTournaments;
-    private int numRuns;
+    private int historyLength;
+    private int maxTreeDepth;
+    private int numberOfGames;
 
     /**
      * Insantiate a new configuration object and read in values from given path
@@ -65,45 +53,31 @@ public class Config {
             NamedNodeMap attributes = param.getAttributes();
 
             String id = attributes.getNamedItem("id").getNodeValue();
-            if (id.compareTo("input-file") == 0) {
-                inputPath = attributes.getNamedItem("path").getNodeValue();
-            } else if (id.compareTo("log-file") == 0) {
+            if (id.compareTo("log-file") == 0) {
                 logPath = attributes.getNamedItem("path").getNodeValue();
+                System.out.println("Log path: " + logPath);
             } else if (id.compareTo("solution-file") == 0) {
                 solutionPath = attributes.getNamedItem("path").getNodeValue();
-            } else if (id.compareTo("runs") == 0) {
-                numRuns = Integer.parseInt(attributes.getNamedItem("count").getNodeValue());
+                System.out.println("Solution path: " + solutionPath);
+            } else if (id.compareTo("program-tree") == 0) {
+                maxTreeDepth = Integer.parseInt(attributes.getNamedItem("max-depth").getNodeValue());
+                System.out.println("Max program tree depth: " + maxTreeDepth);
+            } else if (id.compareTo("fitness") == 0) {
+                historyLength = Integer.parseInt(attributes.getNamedItem("history-length").getNodeValue());
+                numberOfGames = Integer.parseInt(attributes.getNamedItem("number-of-games").getNodeValue());
+                System.out.println("History length: " + historyLength);
+                System.out.println("Number of games: " + numberOfGames);
             } else if (id.compareTo("termination") == 0) {
-                numIterations = Integer.parseInt(attributes.getNamedItem("max-iterations").getNodeValue());
-                stopWhenNoChangeFor = Integer.parseInt(attributes.getNamedItem("no-change").getNodeValue());
-            } else if (id.compareTo("penalty") == 0) {
-                penaltyCoefficient = Double.parseDouble(attributes.getNamedItem("coefficient").getNodeValue());
-            } else if (id.compareTo("population") == 0) {
-                populationSize = Integer.parseInt(attributes.getNamedItem("size").getNodeValue());
-                offspringSize = Integer.parseInt(attributes.getNamedItem("offspring").getNodeValue());
-            } else if (id.compareTo("parent-selection") == 0) {
-                parentSelectionMethod = attributes.getNamedItem("method").getNodeValue();
-                if (parentSelectionMethod.compareTo("k-tournament-with-replace") == 0) {
-                    kParentTournaments = Integer.parseInt(attributes.getNamedItem("k").getNodeValue());
-                }
-            } else if (id.compareTo("recombination") == 0) {
-                recombinationMethod = attributes.getNamedItem("method").getNodeValue();
-                if (recombinationMethod.compareTo("n-point-crossover") == 0) {
-                    nCrossoverPoints = Integer.parseInt(attributes.getNamedItem("n-points").getNodeValue());
-                }
-            } else if (id.compareTo("mutation") == 0) {
-                mutationRate = Double.parseDouble(attributes.getNamedItem("rate").getNodeValue());
-            } else if (id.compareTo("survival-selection") == 0) {
-                survivalSelectionMethod = attributes.getNamedItem("method").getNodeValue();
-                if (survivalSelectionMethod.compareTo("k-tournament-no-replace") == 0) {
-                    kSurvivalTournaments = Integer.parseInt(attributes.getNamedItem("k").getNodeValue());
-                }
+                numGenerations = Integer.parseInt(attributes.getNamedItem("max-iterations").getNodeValue());
+                System.out.println("Number of generations: " + numGenerations);
             } else if (id.compareTo("rng") == 0) {
                 String seedValue = attributes.getNamedItem("seed").getNodeValue();
                 if ("TIME".compareTo(seedValue) == 0) {
                     rngSeed = System.currentTimeMillis();
+                    System.out.println("RNG seeded with TIME: " + System.currentTimeMillis());
                 } else {
                     rngSeed = Long.parseLong(seedValue);
+                    System.out.println("RNG seeded with: " + seedValue);
                 }
             } else {
                 System.out.println("ERROR: Unknown configuration option specified: " + id);
@@ -112,79 +86,31 @@ public class Config {
         }
     }
 
-    public String getInputPath() {
-        return inputPath;
-    }
-
-    public int getkParentTournaments() {
-        return kParentTournaments;
-    }
-
-    public int getkSurvivalTournaments() {
-        return kSurvivalTournaments;
-    }
-
     public String getLogPath() {
         return logPath;
     }
 
-    public double getMutationRate() {
-        return mutationRate;
-    }
-
-    public int getnCrossoverPoints() {
-        return nCrossoverPoints;
-    }
-
-    public int getNumIterations() {
-        return numIterations;
-    }
-
-    public int getNumRuns() {
-        return numRuns;
-    }
-
-    public int getOffspringSize() {
-        return offspringSize;
-    }
-
-    public String getParentSelectionMethod() {
-        return parentSelectionMethod;
-    }
-
-    public int getPathCount() {
-        return pathCount;
-    }
-
-    public double getPenaltyCoefficient() {
-        return penaltyCoefficient;
-    }
-
-    public int getPopulationSize() {
-        return populationSize;
-    }
-
-    public String getRecombinationMethod() {
-        return recombinationMethod;
+    public int getNumGenerations() {
+        return numGenerations;
     }
 
     public long getRngSeed() {
         return rngSeed;
     }
 
-    public int getRouterCount() {
-        return routerCount;
-    }
-
     public String getSolutionPath() {
         return solutionPath;
     }
 
-    public int getStopWhenNoChangeFor() {
-        return stopWhenNoChangeFor;
+    public int getHistoryLength() {
+        return historyLength;
     }
 
-    public String getSurvivalSelectionMethod() {
-        return survivalSelectionMethod;
+    public int getMaxTreeDepth() {
+        return maxTreeDepth;
+    }
+
+    public int getNumberOfGames() {
+        return numberOfGames;
     }
 }

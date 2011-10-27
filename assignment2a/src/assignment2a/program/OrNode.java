@@ -4,6 +4,7 @@
  */
 package assignment2a.program;
 
+import assignment2a.Outcome;
 import java.util.List;
 
 /**
@@ -17,7 +18,12 @@ public class OrNode extends BinaryNode {
     }
 
     @Override
-    public Boolean getValue() {
-        return this.children.get(0).getValue() || this.children.get(1).getValue();
+    public String getLabel() {
+        return "OR";
+    }
+
+    @Override
+    public Boolean getValue(List<Outcome> history) {
+        return this.children.get(0).getValue(history) || this.children.get(1).getValue(history);
     }
 }
