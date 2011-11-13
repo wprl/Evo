@@ -40,11 +40,11 @@ public class FitnessProportionalSelection extends SelectTree<Solution> {
         List<Solution> matingPool = new ArrayList<Solution>(numberToSelect);
         int currentMember = 0;
         int i = 0;
-        double r = (config.getRng().nextDouble() % 1) / (double) config.getNumberOfChildren(); // random value between 0 and 1 / #offspring (lambda)
-        while (currentMember < config.getNumberOfChildren()) {
+        double r = (config.getRng().nextDouble() % 1) / (double) numberToSelect; // random value between 0 and 1 / #parents 
+        while (currentMember < numberToSelect) {
             while (r <= a[i]) {
                 matingPool.add(pool.get(i));
-                r = r + (1.0 / config.getNumberOfChildren());
+                r = r + (1.0 / numberToSelect);
                 currentMember++;
             }
             i++;

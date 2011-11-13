@@ -5,8 +5,11 @@
 package assignment2c.tree;
 
 import assignment2c.Config;
+import assignment2c.Solution;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  *
@@ -14,43 +17,54 @@ import java.util.List;
  */
 public class Outcome {
 
-    private boolean prisonerCooperates; // false if defects, true if cooperates
-    private boolean opponentCooperates; // false if defects, true if cooperates
+    private Map<Solution, Boolean> cooperation;
 
-    public boolean getOpponentCooperates() {
-        return opponentCooperates;
+    public Outcome(Solution a, Solution b, boolean aCooperates, boolean bCooperates) {
+        this.cooperation = new HashMap<Solution, Boolean>(2);
+        this.cooperation.put(a, aCooperates);
+        this.cooperation.put(b, bCooperates);
     }
 
-    public boolean getPrisonerCooperates() {
-        return prisonerCooperates;
+    public boolean getCooperationFor(Solution s) {
+        return this.cooperation.get(s);
     }
 
-    public Outcome(boolean prisoner, boolean opponent) {
-        this.prisonerCooperates = prisoner;
-        this.opponentCooperates = opponent;
+    public Solution getOpponent(Solution s) {
+        for (Solution other : this.cooperation.keySet()) {
+            if (other == s) {
+                continue; // not really other
+            }
+
+            return other;
+        }
+
+        // playing against self
+        return s;
     }
 
-    public static List<Outcome> createRandomHistory(int length) {
+    public static List<Outcome> createRandomHistory(Solution a, Solution b, int length) {
         List<Outcome> history = new ArrayList<Outcome>(length);
 
         while (history.size() < length) {
-            boolean prisoner = Config.getSingleton().getRng().nextBoolean();
-            boolean opponent = Config.getSingleton().getRng().nextBoolean();
-            Outcome o = new Outcome(prisoner, opponent);
+            boolean aCooperates = Config.getSingleton().getRng().nextBoolean();
+            boolean bCooperates = Config.getSingleton().getRng().nextBoolean();
+            Outcome o = new Outcome(a, b, aCooperates, bCooperates);
             history.add(o);
         }
 
         return history;
     }
 
-    public int getPayoff() {
-        if (!this.prisonerCooperates && !this.opponentCooperates) {
+    public int getPayoffFor(Solution s) {
+        Solution opponent = this.getOpponent(s);
+
+        if (!this.cooperation.get(s) && !this.cooperation.get(opponent)) {
             return 1;
-        } else if (this.prisonerCooperates && this.opponentCooperates) {
+        } else if (this.cooperation.get(s) && this.cooperation.get(opponent)) {
             return 3;
-        } else if (this.prisonerCooperates && !this.opponentCooperates) {
+        } else if (this.cooperation.get(s) && !this.cooperation.get(opponent)) {
             return 0;
-        } else { // if (!this.prisonerCooperates && this.opponentCooperates)
+        } else { // if (!this.cooperation.get(s) && this.cooperation.get(opponent))
             return 5;
         }
     }

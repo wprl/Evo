@@ -4,6 +4,7 @@
  */
 package assignment2c.tree;
 
+import assignment2c.Solution;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -22,8 +23,8 @@ public class NotNode extends Tree<Boolean> {
     }
 
     @Override
-    public Boolean getValue(List<Outcome> history) {
-        return !this.children.get(0).getValue(history); // contract in constructor, so this is safe
+    public Boolean getValue(List<Outcome> history, Solution s) {
+        return !this.children.get(0).getValue(history, s); // contract in constructor, so this is safe
     }
 
     @Override

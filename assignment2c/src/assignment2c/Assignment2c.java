@@ -1,11 +1,14 @@
 package assignment2c;
 
+import assignment2c.task.EvaluateFitness;
+import assignment2c.tree.OpponentNode;
+import assignment2c.tree.Outcome;
+import assignment2c.tree.Tree;
 import java.io.File;
 import java.io.IOException;
-import java.util.Random;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.concurrent.TimeoutException;
 import joptsimple.OptionParser;
 import joptsimple.OptionSet;
@@ -46,38 +49,54 @@ public class Assignment2c {
 
             Population p = new Population(); // creates first generation
             Solution runBest = null;
-            int fitnessStaticFor = config.getPopulationSize(); // fitness static for lambda evals initially
+            Solution lastGenerationBest = null;
 
-            while (p.getNumberOfEvaluations() < config.getNumberOfEvaluationsPerRun()) {
+            // fitness static for (lambda * co-evolutionary sample size) evals initially
+            int fitnessStaticFor = config.getPopulationSize() * config.getCoevolutionarySampleSize();
 
-                if (fitnessStaticFor > config.getStopIfFitnessStaticFor()) {
+            while (p.getTotalNumberOfEvaluations() < config.getNumberOfEvaluationsPerRun()) {
+
+                if (fitnessStaticFor >= config.getStopIfFitnessStaticFor()) {
                     break;
                 }
 
-                Solution generationBest = p.getBest();
-
-                if (runBest == null || generationBest.getFitness() > runBest.getFitness()) {
-                    runBest = generationBest;
-                    fitnessStaticFor = 0;
-                } else {
-                    fitnessStaticFor += config.getNumberOfChildren();
+                if (runBest == null || p.getBest().getFitness() > runBest.getFitness()) {
+                    runBest = p.getBest();
                 }
 
-                log.write(p.getNumberOfEvaluations() + "\t" + p.getAverageFitness() + "\t" + p.getBest().getFitness() + "\n\n");
+                log.write(p.getTotalNumberOfEvaluations() + "\t" + p.getAverageFitness() + "\t" + p.getBest().getFitness() + "\n\n");
+
+                lastGenerationBest = p.getBest();
 
                 p = p.nextGeneration(config.getParentSelector(), config.getSurvivalSelector());
+
+                if (lastGenerationBest.getFitness() == p.getBest().getFitness()) {
+                    fitnessStaticFor += config.getNumberOfChildren() * config.getCoevolutionarySampleSize();
+                } else {
+                    fitnessStaticFor = 0;
+                }
             }
 
-            log.write(p.getNumberOfEvaluations() + "\t" + p.getAverageFitness() + "\t" + p.getBest().getFitness() + "\n\n");
+            log.write(p.getTotalNumberOfEvaluations() + "\t" + p.getAverageFitness() + "\t" + p.getBest().getFitness() + "\n\n");
 
             if (experimentBest == null || runBest.getFitness() > experimentBest.getFitness()) {
                 experimentBest = runBest;
             }
         }
 
+        config.getExec().shutdown();
+
+        // write un-avaraged fitness for experiment best vs. tit-for-tat
+        Solution titForTat = new Solution(new OpponentNode(new ArrayList<Tree<Boolean>>(), 0, 0));
+        EvaluateFitness worker = new EvaluateFitness(experimentBest, titForTat);
+        double bestFitnessVsTitForTat = worker.call();
+
+        log.write("ABSOLUTE FITNESS\n\n" + bestFitnessVsTitForTat + "\n\n");
+
         experimentBest.writeToPath(config.getSolutionPath());
 
-        config.getExec().shutdown();
+
+
     }
 
     /**

@@ -5,6 +5,7 @@
 package assignment2c.tree;
 
 import assignment2c.Config;
+import assignment2c.Solution;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -20,7 +21,7 @@ public abstract class Tree<T> {
     protected int depth;
     protected List<Tree<T>> allNodesInTree;
 
-    public abstract T getValue(List<Outcome> history);
+    public abstract T getValue(List<Outcome> history, Solution s);
 
     public abstract String getLabel();
 

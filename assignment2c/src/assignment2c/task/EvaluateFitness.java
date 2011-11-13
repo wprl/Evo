@@ -18,27 +18,48 @@ import java.util.concurrent.Callable;
 public class EvaluateFitness implements Callable<Double> {
 
     private Config config = Config.getSingleton();
-    private List<Outcome> history = Outcome.createRandomHistory(config.getHistoryLength());
-    private Solution solution;
+    private Solution prisoner;
     private List<Solution> opponents;
 
-    public EvaluateFitness(Solution solution, List<Solution> pool) {
-        this.solution = solution;
-        this.opponents = new ArrayList<Solution>(config.getNumberOfPlaymates());
+    // evaluates average fitness of random sample of opponentPool
+    public EvaluateFitness(Solution prisoner, List<Solution> opponentPool) {
+        this.prisoner = prisoner;
+        this.opponents = new ArrayList<Solution>(config.getCoevolutionarySampleSize());
 
-        while (this.opponents.size() < config.getNumberOfPlaymates()) {
-            Solution possible = pool.get(config.getRng().nextInt(pool.size()));
+        // draw opponents from the pool till we have the number specified in config
+        while (this.opponents.size() < config.getCoevolutionarySampleSize()) {
+            Solution possible = opponentPool.get(config.getRng().nextInt(opponentPool.size()));
             if (!this.opponents.contains(possible)) {
                 opponents.add(possible);
             }
         }
     }
 
-    private Outcome updateHistory(boolean prisonerCooperates, boolean opponentCooperates) {
-        Outcome outcome = new Outcome(prisonerCooperates, opponentCooperates);
-        this.history.add(0, outcome); // add newest element
-        this.history.remove(this.history.size() - 1); // remove oldest element
+    // evaluates un-averaged fitness (single opponent as for assignments 2a and 2b)
+    public EvaluateFitness(Solution prisoner, Solution opponent) {
+        this.prisoner = prisoner;
+        this.opponents = new ArrayList<Solution>(1);
+        this.opponents.add(opponent);
+    }
+
+    private Outcome updateHistory(List<Outcome> history, Solution opponent, boolean prisonerCooperates, boolean opponentCooperates) {
+        Outcome outcome = new Outcome(this.prisoner, opponent, prisonerCooperates, opponentCooperates);
+        history.add(0, outcome); // add newest element
+        history.remove(history.size() - 1); // remove oldest element
         return outcome;
+    }
+
+    private int play(List<Outcome> history, Solution opponent, int numberOfGames) {
+        int sumPayoffs = 0;
+
+        for (int g = 0; g < numberOfGames; g++) {
+            boolean prisonerCooperates = this.prisoner.getTree().getValue(history, this.prisoner);
+            boolean opponentCooperates = opponent.getTree().getValue(history, opponent);
+            Outcome outcome = this.updateHistory(history, opponent, prisonerCooperates, opponentCooperates);
+            sumPayoffs += outcome.getPayoffFor(this.prisoner);
+        }
+
+        return sumPayoffs;
     }
 
     @Override
@@ -47,34 +68,24 @@ public class EvaluateFitness implements Callable<Double> {
         // this method might be made better by caching the results so that if two
         // solutions are paired more than once, the fitness evaluation does not
         // need to be performed again, but it seems like the overhead would not
-        // be worth it in this case, because it complicates conurrency and the
-        // fitness formula does not take much time to calculate
+        // be worth it in this case: it would complicate conurrency and the
+        // fitness function does not take much time to calculate anyway
 
         double sumFitness = 0.0;
 
         for (Solution opponent : opponents) {
 
+            List<Outcome> history = Outcome.createRandomHistory(this.prisoner, opponent, config.getHistoryLength());
+
             // first play some games to prime the history
-            for (int g = 0; g < 2 * this.history.size(); g++) {
-                boolean prisonerCooperates = this.solution.getTree().getValue(this.history);
-                boolean opponentCooperates = this.history.get(0).getPrisonerCooperates(); // opponent mimics prisoner's last move (tit-for-tat)
-                this.updateHistory(prisonerCooperates, opponentCooperates);
-            }
+            this.play(history, opponent, 2 * history.size());
 
             // now, play for keeps
-            int sumPayoffs = 0;
-
-            for (int g = 0; g < config.getNumberOfGames(); g++) {
-                boolean prisonerCooperates = this.solution.getTree().getValue(this.history);
-                boolean opponentCooperates = opponent.getTree().getValue(this.history);
-
-                Outcome outcome = this.updateHistory(prisonerCooperates, opponentCooperates);
-                sumPayoffs += outcome.getPayoff();
-            }
+            int sumPayoffs = this.play(history, opponent, config.getNumberOfGames());
 
             // calulate fitness score regardless of parsminoy pressure
             double rawFitness = (double) sumPayoffs / (double) config.getNumberOfGames();
-            
+
             sumFitness += rawFitness;
         }
 
@@ -82,6 +93,6 @@ public class EvaluateFitness implements Callable<Double> {
         double avgFitness = sumFitness / opponents.size();
 
         // apply parsimony pressure before returning
-        return avgFitness - (config.getParsimonyPressure() * (double) solution.getTree().getTreeDepth());
+        return avgFitness - (config.getParsimonyPressure() * (double) prisoner.getTree().getTreeDepth());
     }
 }

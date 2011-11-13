@@ -4,6 +4,7 @@
  */
 package assignment2c.tree;
 
+import assignment2c.Solution;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -23,8 +24,8 @@ public class OrNode extends BinaryNode {
     }
 
     @Override
-    public Boolean getValue(List<Outcome> history) {
-        return this.children.get(0).getValue(history) || this.children.get(1).getValue(history);
+    public Boolean getValue(List<Outcome> history, Solution s) {
+        return this.children.get(0).getValue(history, s) || this.children.get(1).getValue(history, s);
     }
 
     protected OrNode() {

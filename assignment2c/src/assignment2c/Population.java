@@ -25,30 +25,36 @@ public class Population {
 
     private Config config = Config.getSingleton();
     private List<Solution> solutions;
-    private int numberOfEvaluations = 0;
+    private int totalNumberOfEvaluations = 0;
 
     public Population() throws ExecutionException, InterruptedException, TimeoutException {
         this.solutions = createRandomForest();
         this.updateFitness(this.solutions, this.solutions);
     }
 
-    private Population(List<Solution> solutions, int numberOfEvaluations) {
+    private Population(List<Solution> solutions, int totalNumberOfEvaluations) {
         this.solutions = solutions;
-        this.numberOfEvaluations = numberOfEvaluations;
+        this.totalNumberOfEvaluations = totalNumberOfEvaluations;
     }
 
     public Population nextGeneration(SelectTree parentSelector, SelectTree survivalSelector) throws InstantiationException, IllegalAccessException, IllegalAccessException, InterruptedException, ExecutionException, TimeoutException {
-        List<Solution> parents = parentSelector.select(config.getMatingPoolSize(), this.solutions);
+        List<Solution> parents = parentSelector.select(config.getNumberOfChildren(), this.solutions);
+
         List<Solution> children = mutate(mate(parents));
+        this.solutions.addAll(children);
+
         this.updateFitness(children, this.solutions); // set fitnesses for children
 
+        List<Solution> survivors;
         if (config.getSurvivalStrategy() == Config.SurvivalStrategy.COMMA) {
-            return new Population(children, this.numberOfEvaluations); // create new population from children of this population
+            // comma survival strategy -- select survivors from children (all parents die)
+            survivors = survivalSelector.select(config.getPopulationSize(), children);
         } else {
-            this.solutions.addAll(children);
-            List<Solution> survivors = survivalSelector.select(config.getPopulationSize(), this.solutions); // cull the population
-            return new Population(survivors, this.numberOfEvaluations);
+            // plus survival strategy -- select survivors from parents and children
+            survivors = survivalSelector.select(config.getPopulationSize(), this.solutions);
         }
+
+        return new Population(survivors, this.totalNumberOfEvaluations);
     }
 
     private <T> List<T> runWorkers(List workers) throws InterruptedException, ExecutionException {
@@ -102,13 +108,13 @@ public class Population {
             s.setFitness(score);
         }
 
-        this.numberOfEvaluations += forest.size(); // TODO is this correct?
+        this.totalNumberOfEvaluations += forest.size() * config.getCoevolutionarySampleSize();
     }
 
     private List<Solution> mate(List<Solution> parents) throws ExecutionException, InterruptedException, TimeoutException {
         // create the forest
         List<SubTreeRecombination> workers = new ArrayList<SubTreeRecombination>(config.getNumberOfChildren());
-        for (int g = 0; g < config.getNumberOfChildren(); g++) {
+        for (int g = 0; g < config.getNumberOfChildren() / 2; g++) {
             Solution a = parents.get(config.getRng().nextInt(parents.size())); // chance parents will be same (makes clones)
             Solution b = parents.get(config.getRng().nextInt(parents.size()));
             SubTreeRecombination worker = new SubTreeRecombination(a, b);
@@ -137,8 +143,8 @@ public class Population {
         return this.runWorkers(workers); // return mutants
     }
 
-    public int getNumberOfEvaluations() {
-        return numberOfEvaluations;
+    public int getTotalNumberOfEvaluations() {
+        return totalNumberOfEvaluations;
     }
 
     public Solution getBest() {

@@ -22,7 +22,6 @@ import org.w3c.dom.NodeList;
 public class Config {
 
     public enum SurvivalStrategy {
-
         COMMA,
         PLUS
     }
@@ -36,10 +35,9 @@ public class Config {
     private int numberOfGames;
     private int numberOfRuns;
     private int numberOfChildren;
-    private int matingPoolSize;
     private int populationSize;
     private int kInTournament;
-    private int numberOfPlaymates = 10; // TODO !!!!!!!
+    private int coevolutionarySampleSize;
     private double percentInUpperTierForOverselection;
     private double parsimonyPressure;
     private double mutationRate;
@@ -79,7 +77,7 @@ public class Config {
 
         NodeList params = doc.getElementsByTagName("config");
 
-        // This loops through all <config> tags, checks there IDs, and sets options accordingly
+        // this loops through all <config> tags, checks there IDs, and sets options accordingly
         for (int i = 0; i < params.getLength(); i++) {
             Node param = params.item(i);
             NamedNodeMap attributes = param.getAttributes();
@@ -97,13 +95,9 @@ public class Config {
                 System.out.println("Population size: " + populationSize);
                 System.out.println("Number of children: " + numberOfChildren);
 
-                String strategy = attributes.getNamedItem("strategy").getNodeValue();
+                String strategy = attributes.getNamedItem("survival-strategy").getNodeValue();
                 if (strategy.compareTo("comma") == 0) {
                     survivalStrategy = SurvivalStrategy.COMMA;
-                    if (this.populationSize != this.numberOfChildren) {
-                        System.out.println("Population size and number of children must be same for comma survival strategy.");
-                        System.exit(1);
-                    }
                 } else if (strategy.compareTo("plus") == 0) {
                     survivalStrategy = SurvivalStrategy.PLUS;
                 } else {
@@ -117,13 +111,11 @@ public class Config {
                 historyLength = Integer.parseInt(attributes.getNamedItem("history-length").getNodeValue());
                 numberOfGames = Integer.parseInt(attributes.getNamedItem("number-of-games").getNodeValue());
                 parsimonyPressure = Double.parseDouble(attributes.getNamedItem("parsimony-pressure").getNodeValue());
+                coevolutionarySampleSize = Integer.parseInt(attributes.getNamedItem("coevolutionary-sample-size").getNodeValue());
                 System.out.println("History length: " + historyLength);
                 System.out.println("Number of games: " + numberOfGames);
-
-                if (numberOfGames < (3 * historyLength)) {
-                    System.out.println("l < 3k");
-                    System.exit(1);
-                }
+                System.out.println("Parsimony pressure: " + parsimonyPressure);
+                System.out.println("Co-evolutionary sample size: " + coevolutionarySampleSize);
             } else if (id.compareTo("mutation") == 0) {
                 mutationRate = Double.parseDouble(attributes.getNamedItem("rate").getNodeValue());
                 System.out.println("Mutation rate: " + mutationRate);
@@ -140,6 +132,7 @@ public class Config {
                     parentSelector = new FitnessProportionalSelection();
                 } else if (method.compareTo("over-selection") == 0) {
                     parentSelector = new OverSelection();
+                    percentInUpperTierForOverselection = Double.parseDouble(attributes.getNamedItem("x").getNodeValue());
                 } else {
                     System.out.println("ERROR: Unknown parent selection method: " + method);
                     System.exit(1);
@@ -169,6 +162,17 @@ public class Config {
                 System.out.println("ERROR: Unknown configuration option specified: " + id);
                 System.exit(1);
             }
+        }
+
+        // sanity checks
+        if (numberOfGames < (3 * historyLength)) {
+            System.out.println("l > 3k");
+            System.exit(1);
+        }
+
+        if (coevolutionarySampleSize < 1 || coevolutionarySampleSize > populationSize + numberOfChildren - 1) {
+            System.out.println("(1 < co-evolutionary sample size < lambda + mu) NOT SATISIFED");
+            System.exit(1);
         }
     }
 
@@ -216,10 +220,6 @@ public class Config {
         return numberOfChildren;
     }
 
-    public int getMatingPoolSize() {
-        return matingPoolSize;
-    }
-
     public int getPopulationSize() {
         return populationSize;
     }
@@ -260,8 +260,8 @@ public class Config {
         return singleton;
     }
 
-    public int getNumberOfPlaymates() {
-        return numberOfPlaymates;
+    public int getCoevolutionarySampleSize() {
+        return coevolutionarySampleSize;
     }
 
     public SurvivalStrategy getSurvivalStrategy() {

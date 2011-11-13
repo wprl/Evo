@@ -4,6 +4,7 @@
  */
 package assignment2c.tree;
 
+import assignment2c.Solution;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -30,8 +31,8 @@ public class PrisonerNode extends Tree<Boolean> {
     }
 
     @Override
-    public Boolean getValue(List<Outcome> history) {
-        return history.get(memory).getPrisonerCooperates();
+    public Boolean getValue(List<Outcome> history, Solution s) {
+        return history.get(memory).getCooperationFor(s);
     }
 
     @Override
