@@ -26,15 +26,18 @@ public class Population {
     private Config config = Config.getSingleton();
     private List<Solution> solutions;
     private int totalNumberOfEvaluations = 0;
+    private List<Solution> hallOfFame;
 
     public Population() throws ExecutionException, InterruptedException, TimeoutException {
         this.solutions = createRandomForest();
+        this.hallOfFame = new ArrayList<Solution>();
         this.updateFitness(this.solutions, this.solutions);
     }
 
-    private Population(List<Solution> solutions, int totalNumberOfEvaluations) {
+    private Population(List<Solution> solutions, List<Solution> hallOfFame, int totalNumberOfEvaluations) {
         this.solutions = solutions;
         this.totalNumberOfEvaluations = totalNumberOfEvaluations;
+        this.hallOfFame = hallOfFame;
     }
 
     public Population nextGeneration(SelectTree parentSelector, SelectTree survivalSelector) throws InstantiationException, IllegalAccessException, IllegalAccessException, InterruptedException, ExecutionException, TimeoutException {
@@ -54,7 +57,9 @@ public class Population {
             survivors = survivalSelector.select(config.getPopulationSize(), this.solutions);
         }
 
-        return new Population(survivors, this.totalNumberOfEvaluations);
+        hallOfFame.add(this.getBest());
+
+        return new Population(survivors, this.hallOfFame, this.totalNumberOfEvaluations);
     }
 
     private <T> List<T> runWorkers(List workers) throws InterruptedException, ExecutionException {
@@ -91,6 +96,12 @@ public class Population {
     }
 
     private void updateFitness(List<Solution> forest, List<Solution> opponents) throws InterruptedException, ExecutionException {
+
+        if (config.getUseHallOfFame()) {
+            opponents = new ArrayList<Solution>(opponents); // copy array
+            opponents.addAll(this.hallOfFame);
+        }
+
         // evaluate fitness of each tree in forest
         List<EvaluateFitness> workers = new ArrayList<EvaluateFitness>(forest.size());
 

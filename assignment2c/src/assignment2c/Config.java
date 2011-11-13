@@ -22,14 +22,15 @@ import org.w3c.dom.NodeList;
 public class Config {
 
     public enum SurvivalStrategy {
+
         COMMA,
         PLUS
     }
     private String logPath;
     private String solutionPath;
+    private long rngSeed;
     private int numberOfEvaluationsPerRun;
     private int stopIfFitnessStaticFor;
-    private long rngSeed;
     private int historyLength;
     private int maxTreeDepth;
     private int numberOfGames;
@@ -41,6 +42,7 @@ public class Config {
     private double percentInUpperTierForOverselection;
     private double parsimonyPressure;
     private double mutationRate;
+    private boolean useHallOfFame;
     private SelectTree parentSelector;
     private SelectTree survivalSelector;
     private SurvivalStrategy survivalStrategy;
@@ -137,6 +139,8 @@ public class Config {
                     System.out.println("ERROR: Unknown parent selection method: " + method);
                     System.exit(1);
                 }
+            } else if (id.compareTo("cycle-prevention") == 0) {
+                useHallOfFame = Boolean.parseBoolean(attributes.getNamedItem("hall-of-fame").getNodeValue());
             } else if (id.compareTo("survival-selection") == 0) {
                 String method = attributes.getNamedItem("method").getNodeValue();
                 if (method.compareTo("k-tournament") == 0) {
@@ -268,7 +272,7 @@ public class Config {
         return survivalStrategy;
     }
 
-    public void setSurvivalStrategy(SurvivalStrategy survivalStrategy) {
-        this.survivalStrategy = survivalStrategy;
+    public boolean getUseHallOfFame() {
+        return useHallOfFame;
     }
 }
