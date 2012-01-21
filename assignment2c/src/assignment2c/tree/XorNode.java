@@ -32,14 +32,14 @@ public class XorNode extends BinaryNode {
     }
 
     @Override
-    public XorNode copy() {
+    public XorNode copy(int newDepth) {
         XorNode copy = new XorNode();
 
         copy.children = new ArrayList<Tree<Boolean>>(this.children.size());
         copy.depth = this.depth;
 
         for (Tree<Boolean> child : this.children) {
-            copy.children.add(child.copy());
+            copy.children.add(child.copy(newDepth + 1));
         }
 
         return copy;

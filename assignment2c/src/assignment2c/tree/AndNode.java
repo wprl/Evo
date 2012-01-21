@@ -32,14 +32,14 @@ public class AndNode extends BinaryNode {
     }
 
     @Override
-    public AndNode copy() {
+    public AndNode copy(int newDepth) {
         AndNode copy = new AndNode();
 
         copy.children = new ArrayList<Tree<Boolean>>(this.children.size());
         copy.depth = this.depth;
 
         for (Tree<Boolean> child : this.children) {
-            copy.children.add(child.copy());
+            copy.children.add(child.copy(newDepth + 1));
         }
 
         return copy;

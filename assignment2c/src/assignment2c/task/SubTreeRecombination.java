@@ -20,24 +20,35 @@ public class SubTreeRecombination implements Callable<List<Solution>> {
 
     Solution a;
     Solution b;
+    Config config = Config.getSingleton();
 
     public SubTreeRecombination(Solution a, Solution b) {
-        this.a = a.copy();
-        this.b = b.copy();
+        this.a = a;
+        this.b = b;
     }
 
     @Override
     public List<Solution> call() throws Exception {
-        Tree<Boolean> subtreeA = a.getTree().randomSubTree();
-        Tree<Boolean> subtreeB = b.getTree().randomSubTree();
+        List<Solution> children = null;
+        boolean firstTry = true;
+        
+        while (firstTry || a.getTree().getTreeDepth() > config.getMaxTreeDepth() || b.getTree().getTreeDepth() > config.getMaxTreeDepth()) {
+            Solution aCopy = this.a.copy();
+            Solution bCopy = this.b.copy();
 
-        // replace the subtrees in the *copies* of a and b and use them as children
-        a.getTree().replace(subtreeA, subtreeB);
-        b.getTree().replace(subtreeB, subtreeA);
+            Tree<Boolean> subtreeA = aCopy.getTree().randomSubTree();
+            Tree<Boolean> subtreeB = bCopy.getTree().randomSubTree();
 
-        List<Solution> children = new ArrayList<Solution>(2);
-        children.add(a);
-        children.add(b);
+            // replace the subtrees in the *copies* of a and b and use them as children
+            a.getTree().replace(subtreeA, subtreeB);
+            b.getTree().replace(subtreeB, subtreeA);
+
+            children = new ArrayList<Solution>(2);
+            children.add(aCopy);
+            children.add(bCopy);
+
+            firstTry = false;
+        }
 
         return children;
     }

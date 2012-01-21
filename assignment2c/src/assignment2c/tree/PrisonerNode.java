@@ -48,14 +48,14 @@ public class PrisonerNode extends Tree<Boolean> {
     }
 
     @Override
-    public PrisonerNode copy() {
+    public PrisonerNode copy(int newDepth) {
         PrisonerNode copy = new PrisonerNode();
 
         copy.children = new ArrayList<Tree<Boolean>>(this.children.size());
         copy.depth = this.depth;
 
         for (Tree<Boolean> child : this.children) {
-            copy.children.add(child.copy());
+            copy.children.add(child.copy(newDepth + 1));
         }
 
         return copy;

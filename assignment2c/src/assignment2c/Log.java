@@ -56,6 +56,7 @@ public class Log {
     public void write(String s) {
         try {
             out.write(s);
+            out.flush();
             System.out.print(s);
         } catch (IOException e) {
             System.out.println("ERROR: failed to write to log.");

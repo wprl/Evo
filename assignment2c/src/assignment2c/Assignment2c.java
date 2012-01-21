@@ -30,8 +30,7 @@ public class Assignment2c {
      * @param args the command line arguments
      */
     public static void main(String[] args) throws InterruptedException, ExecutionException, TimeoutException, InstantiationException, IllegalAccessException {
-
-        System.out.println("GENETIC PROGRAMMING ASSIGNMENT 2B");
+        System.out.println("GENETIC PROGRAMMING -- ASSIGNMENT 2C");
         System.out.println("Number of processors/cores: " + Runtime.getRuntime().availableProcessors());
 
         handleOptions(args); // check for --config option
@@ -54,9 +53,9 @@ public class Assignment2c {
             // fitness static for (lambda * co-evolutionary sample size) evals initially
             int fitnessStaticFor = config.getPopulationSize() * config.getCoevolutionarySampleSize();
 
-            while (p.getTotalNumberOfEvaluations() < config.getNumberOfEvaluationsPerRun()) {
+            while (runBest == null || p.getTotalNumberOfEvaluations() < config.getNumberOfEvaluationsPerRun()) { // must run loop at least once
 
-                if (fitnessStaticFor >= config.getStopIfFitnessStaticFor()) {
+                if (runBest != null && fitnessStaticFor >= config.getStopIfFitnessStaticFor()) {
                     break;
                 }
 
@@ -82,20 +81,20 @@ public class Assignment2c {
             if (experimentBest == null || runBest.getFitness() > experimentBest.getFitness()) {
                 experimentBest = runBest;
             }
+
+            // write un-avaraged fitness for run best vs. tit-for-tat
+            Solution titForTat = new Solution(new OpponentNode(new ArrayList<Tree<Boolean>>(), 0, 0));
+            EvaluateFitness worker = new EvaluateFitness(runBest, titForTat);
+            double bestFitnessVsTitForTat = worker.call();
+
+            log.write("ABSOLUTE FITNESS\n\n" + bestFitnessVsTitForTat + "\n\n");
         }
 
         config.getExec().shutdown();
 
-        // write un-avaraged fitness for experiment best vs. tit-for-tat
-        Solution titForTat = new Solution(new OpponentNode(new ArrayList<Tree<Boolean>>(), 0, 0));
-        EvaluateFitness worker = new EvaluateFitness(experimentBest, titForTat);
-        double bestFitnessVsTitForTat = worker.call();
-
-        log.write("ABSOLUTE FITNESS\n\n" + bestFitnessVsTitForTat + "\n\n");
+        log.close();
 
         experimentBest.writeToPath(config.getSolutionPath());
-
-
 
     }
 

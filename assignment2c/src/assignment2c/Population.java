@@ -23,15 +23,15 @@ import java.util.concurrent.TimeoutException;
  */
 public class Population {
 
+    private int totalNumberOfEvaluations = 0;
     private Config config = Config.getSingleton();
     private List<Solution> solutions;
-    private int totalNumberOfEvaluations = 0;
     private List<Solution> hallOfFame;
 
     public Population() throws ExecutionException, InterruptedException, TimeoutException {
         this.solutions = createRandomForest();
         this.hallOfFame = new ArrayList<Solution>();
-        this.updateFitness(this.solutions, this.solutions);
+        this.updateFitness(this.solutions);
     }
 
     private Population(List<Solution> solutions, List<Solution> hallOfFame, int totalNumberOfEvaluations) {
@@ -46,14 +46,14 @@ public class Population {
         List<Solution> children = mutate(mate(parents));
         this.solutions.addAll(children);
 
-        this.updateFitness(children, this.solutions); // set fitnesses for children
-
         List<Solution> survivors;
         if (config.getSurvivalStrategy() == Config.SurvivalStrategy.COMMA) {
             // comma survival strategy -- select survivors from children (all parents die)
+            this.updateFitness(children); // don't need to evaluate parents as they will die
             survivors = survivalSelector.select(config.getPopulationSize(), children);
         } else {
             // plus survival strategy -- select survivors from parents and children
+            this.updateFitness(this.solutions); // reevaluate everyone based on new population
             survivors = survivalSelector.select(config.getPopulationSize(), this.solutions);
         }
 
@@ -95,10 +95,10 @@ public class Population {
         return forestSolutions;
     }
 
-    private void updateFitness(List<Solution> forest, List<Solution> opponents) throws InterruptedException, ExecutionException {
+    private void updateFitness(List<Solution> forest) throws InterruptedException, ExecutionException {
 
+        List<Solution> opponents = new ArrayList<Solution>(this.solutions); // copy array
         if (config.getUseHallOfFame()) {
-            opponents = new ArrayList<Solution>(opponents); // copy array
             opponents.addAll(this.hallOfFame);
         }
 

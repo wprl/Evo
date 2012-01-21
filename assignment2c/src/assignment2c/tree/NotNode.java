@@ -36,14 +36,14 @@ public class NotNode extends Tree<Boolean> {
     }
 
     @Override
-    public NotNode copy() {
+    public NotNode copy(int newDepth) {
         NotNode copy = new NotNode();
 
         copy.children = new ArrayList<Tree<Boolean>>(this.children.size());
-        copy.depth = this.depth;
+        copy.depth = newDepth;
 
         for (Tree<Boolean> child : this.children) {
-            copy.children.add(child.copy());
+            copy.children.add(child.copy(newDepth + 1));
         }
 
         return copy;

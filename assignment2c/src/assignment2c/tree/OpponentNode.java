@@ -49,14 +49,14 @@ public class OpponentNode extends Tree<Boolean> {
     }
 
     @Override
-    public OpponentNode copy() {
+    public OpponentNode copy(int newDepth) {
         OpponentNode copy = new OpponentNode();
 
         copy.children = new ArrayList<Tree<Boolean>>(this.children.size());
         copy.depth = this.depth;
 
         for (Tree<Boolean> child : this.children) {
-            copy.children.add(child.copy());
+            copy.children.add(child.copy(newDepth + 1));
         }
 
         return copy;

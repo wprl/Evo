@@ -18,14 +18,14 @@ public abstract class Tree<T> {
 
     private Config config = Config.getSingleton();
     protected List<Tree<T>> children;
-    protected int depth;
     protected List<Tree<T>> allNodesInTree;
+    protected int depth;
 
     public abstract T getValue(List<Outcome> history, Solution s);
 
     public abstract String getLabel();
 
-    public abstract Tree<T> copy();
+    public abstract Tree<T> copy(int newDepth);
 
     protected Tree() {
     }
@@ -77,7 +77,7 @@ public abstract class Tree<T> {
     public void replace(Tree<T> subtree, Tree<T> newTree) {
         if (this.children.contains(subtree)) {
             this.children.remove(subtree);
-            this.children.add(newTree);
+            this.children.add(newTree.copy(this.depth + 1));
         } else {
             for (Tree<T> child : this.children) {
                 child.replace(subtree, newTree);

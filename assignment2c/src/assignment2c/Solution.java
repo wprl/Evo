@@ -23,10 +23,10 @@ public class Solution {
     }
 
     public void setFitness(double fitness) {
-        if (this.fitness != null) {
-            System.out.println("Fitness may be set only once!");
-            System.exit(1);
-        }
+//        if (this.fitness != null) {
+//            System.out.println("Fitness may be set only once!");
+//            System.exit(1);
+//        }
         this.fitness = fitness;
     }
 
@@ -43,7 +43,7 @@ public class Solution {
     }
 
     public Solution copy() {
-        Solution copy = new Solution(this.tree.copy());
+        Solution copy = new Solution(this.tree.copy(0));
         return copy;
     }
 
